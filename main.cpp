@@ -1,6 +1,7 @@
 #include <cstdio>
 #include <mpi.h>
 #include "doc_utilities.h"
+#include "embedding_utilities.h"
 using namespace std;
 
 constexpr size_t one_GB = 1024 * 1024 * 1024;
@@ -78,18 +79,17 @@ int main(int argc, char** argv) {
     work_container w = {0};
     fill_work_container(w, d, shm_base_ptr, rank);
 
-    // Temporary debug output: print each rank's assigned span in rank order.
-    for (int printing_rank = 0; printing_rank < world_size; ++printing_rank) {
-        if (rank == printing_rank) {
-            printf("rank %d: ", rank);
-            if (!w.work_mem.empty()) {
-                fwrite(w.work_mem.data(), sizeof(char), w.work_mem.size(), stdout);
-            }
-            putchar('\n');
-            fflush(stdout);
-        }
-        MPI_Barrier(MPI_COMM_WORLD);
-    }
+    // chunking the work memory into lines
+    std::vector<std::string_view> chunks;
+    chunk_memory(w, chunks);
+
+    // embedding the chunks
+    vector<float> embeddings;
+    embed_chunks(chunks, embeddings);
+
+    // printing the length of the embeddings
+    printf("Embeddings length: %zu\n", embeddings.size());
+
 
 
     MPI_Win_unlock_all(shm_window);
