@@ -1,0 +1,13 @@
+# generated build files
+/build/
+
+# downloaded model weights
+*.gguf
+
+# symlink to local llama.cpp checkout
+/llama.cpp
+
+#local environment folders
+/.aws/
+/.codex/
+/.agents/

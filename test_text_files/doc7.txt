@@ -1,0 +1,5 @@
+DOC7 BEGIN
+Seven candles lit the room.
+The door was painted blue.
+Outside, leaves moved in the wind.
+DOC7 END

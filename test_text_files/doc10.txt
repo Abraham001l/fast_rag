@@ -1,0 +1,3 @@
+DOC10 BEGIN
+The final document ends with this sentence.
+DOC10 END

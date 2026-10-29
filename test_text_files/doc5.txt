@@ -1,0 +1,3 @@
+DOC5 BEGIN
+Rain tapped against the roof.
+DOC5 END

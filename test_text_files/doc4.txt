@@ -1,0 +1,5 @@
+DOC4 BEGIN
+The library opened at nine.
+Readers gathered near the windows.
+A clock ticked above the wooden desk.
+DOC4 END

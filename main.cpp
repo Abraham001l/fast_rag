@@ -1,6 +1,9 @@
 #include <cstdio>
 #include <mpi.h>
+#include "doc_utilities.h"
 using namespace std;
+
+constexpr size_t one_GB = 1024 * 1024 * 1024;
 
 int main(int argc, char** argv) {
     // initial MPI setup
@@ -9,25 +12,88 @@ int main(int argc, char** argv) {
     int world_size;
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
-    int shm_rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &shm_rank);
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    // ensuring we have min num cores assgined for parallel execution
-    if (world_size < 3) {
-        if (shm_rank == 0) {
-            printf("Error: Need -np arguement to be atleast 3 for parallel execution\n");
-        }
-        MPI_Finalize();
-        return 1;
+    // creating 1GB shared memory
+    MPI_Comm shm_comm;
+    MPI_Comm_split_type(
+        MPI_COMM_WORLD, 
+        MPI_COMM_TYPE_SHARED, 
+        0, 
+        MPI_INFO_NULL, 
+        &shm_comm);
+
+    MPI_Win shm_window;
+    void* shm_data_ptr = nullptr;
+
+    MPI_Aint shm_size = (rank == 0) ? sizeof(char) * one_GB : 0;
+
+    MPI_Win_allocate_shared(
+        shm_size, 
+        sizeof(char), 
+        MPI_INFO_NULL, 
+        shm_comm, 
+        &shm_data_ptr, 
+        &shm_window);
+
+    // getting pointer to rank 0 shm
+    MPI_Aint shm_tot_bytes;
+    int displacement_unit;
+    char* shm_base_ptr;
+
+    MPI_Win_shared_query(
+        shm_window, 
+        0, 
+        &shm_tot_bytes, 
+        &displacement_unit, 
+        &shm_base_ptr);
+    
+    // having rank 0 fill in shm and assigning rank offsets
+    MPI_Win_lock_all(0, shm_window);
+    
+    // skeleton struct for docs
+    docs_container d = {sizeof(size_t)*3, 0, 0};
+
+    if (rank == 0) {
+        vector<string> doc_paths = {"test_text_files/doc1.txt", "test_text_files/doc2.txt", "test_text_files/doc3.txt", "test_text_files/doc4.txt",
+        "test_text_files/doc5.txt", "test_text_files/doc6.txt", "test_text_files/doc7.txt", "test_text_files/doc8.txt", "test_text_files/doc9.txt",
+        "test_text_files/doc10.txt"};
+
+        populate_docs_container(d, shm_base_ptr, doc_paths);
+        calc_rank_offsets(d, shm_base_ptr, world_size);
     }
 
-    
+    // synchronizing shm for processes
+    MPI_Win_sync(shm_window);
+    MPI_Barrier(shm_comm);
+    MPI_Win_sync(shm_window);
 
-    
+    // having other ranks define skeleton struct for docs
+    if (rank != 0) {
+        interpret_filled_docs_container(d, shm_base_ptr, world_size);
+    }
+
+    // creating & filling work containers
+    work_container w = {0};
+    fill_work_container(w, d, shm_base_ptr, rank);
+
+    // Temporary debug output: print each rank's assigned span in rank order.
+    for (int printing_rank = 0; printing_rank < world_size; ++printing_rank) {
+        if (rank == printing_rank) {
+            printf("rank %d: ", rank);
+            if (!w.work_mem.empty()) {
+                fwrite(w.work_mem.data(), sizeof(char), w.work_mem.size(), stdout);
+            }
+            putchar('\n');
+            fflush(stdout);
+        }
+        MPI_Barrier(MPI_COMM_WORLD);
+    }
 
 
-
-
-
-    return 0;
+    MPI_Win_unlock_all(shm_window);
+    MPI_Win_free(&shm_window);
+    MPI_Comm_free(&shm_comm);
+    MPI_Finalize();
 }

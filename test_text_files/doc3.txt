@@ -1,0 +1,3 @@
+DOC3 BEGIN
+Three green apples rested on the table.
+DOC3 END

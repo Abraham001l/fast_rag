@@ -1,0 +1,4 @@
+DOC6 BEGIN
+A train passed through the valley.
+Its lights disappeared into the evening fog.
+DOC6 END

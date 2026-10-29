@@ -1,0 +1,4 @@
+DOC2 BEGIN
+A small boat drifted across the lake.
+The water reflected the morning sky.
+DOC2 END

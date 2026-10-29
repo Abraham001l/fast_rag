@@ -1,0 +1,3 @@
+DOC8 BEGIN
+The baker placed fresh bread on a shelf.
+DOC8 END

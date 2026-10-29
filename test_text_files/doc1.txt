@@ -1,0 +1,3 @@
+DOC1 BEGIN
+The red fox crossed the quiet meadow.
+DOC1 END

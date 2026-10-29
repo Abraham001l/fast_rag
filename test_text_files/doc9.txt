@@ -1,0 +1,5 @@
+DOC9 BEGIN
+A telescope pointed toward the stars.
+The moon rose above the distant hills.
+An observer recorded the time in a notebook.
+DOC9 END
