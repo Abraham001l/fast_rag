@@ -4,7 +4,6 @@
 #include <nlohmann/json.hpp>
 #include <string_view>
 #include <vector>
-#include <cblas.h>
 using namespace std;
 
 void chunk_memory(work_container& w, std::vector<std::string_view> &chunks);

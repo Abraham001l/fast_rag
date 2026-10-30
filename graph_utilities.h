@@ -13,10 +13,10 @@ struct csr_graph {
     vector<size_t> offsets;
 };
 
-// Strict cosine threshold; no self-edges or edges involving zero-norm vectors.
+// strict cosine threshold; no self-edges or edges involving zero-norm vectors.
 void build_adjacency(matrix_rep_adjacency &adj, vector<float> &embeddings, float threshold);
 
-void build_csr(csr_graph &csr, matrix_rep_adjacency &adj);
+void build_csr(csr_graph &csr, const matrix_rep_adjacency &adj);
 
 void norm(vector<float> &embeddings, vector<float> &norms);
 

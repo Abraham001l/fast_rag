@@ -3,12 +3,16 @@ cmake_minimum_required(VERSION 3.16)
 project(fast_rag LANGUAGES CXX)
 
 find_package(MPI REQUIRED COMPONENTS CXX)
+find_package(BLAS REQUIRED)
 
 add_executable(fast_rag
     main.cpp
     doc_utilities.cpp
     embedding_utilities.cpp
+    graph_utilities.cpp
 )
+
+target_link_libraries(fast_rag PRIVATE ${BLAS_LIBRARIES})
 
 target_include_directories(fast_rag PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/third_party

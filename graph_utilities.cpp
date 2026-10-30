@@ -1,4 +1,5 @@
 #include "graph_utilities.h"
+#include <algorithm>
 #include <cblas.h>
 #include <cmath>
 #include <stdexcept>
@@ -33,6 +34,42 @@ void build_adjacency(matrix_rep_adjacency &adj, vector<float> &embeddings, float
             const bool connected = std::isfinite(similarity) && similarity > threshold;
             adj.adjacency[i][j] = connected;
             adj.adjacency[j][i] = connected;
+        }
+    }
+}
+
+void build_csr(csr_graph &csr, const matrix_rep_adjacency &adj) {
+    const size_t count = adj.adjacency.size();
+    for (const auto& row : adj.adjacency) {
+        if (row.size() != count) {
+            throw std::invalid_argument("Adjacency matrix must be square");
+        }
+    }
+
+    // pass 1, count edges and build the prefix sum directly in offsets.
+    csr.offsets.resize(count + 1);
+    csr.offsets[0] = 0;
+    for (size_t i = 0; i < count; ++i) {
+        const auto& row = adj.adjacency[i];
+        const size_t degree = static_cast<size_t>(std::count(row.begin(), row.end(), true));
+        if (degree > csr.neighbors.max_size() - csr.offsets[i]) {
+            throw std::length_error("CSR neighbor array is too large");
+        }
+        csr.offsets[i + 1] = csr.offsets[i] + degree;
+    }
+
+    // allocate once (or reuse existing capacity), with no growth during filling.
+    csr.neighbors.resize(csr.offsets[count]);
+
+    // pass 2, fill disjoint row ranges, keeping neighbor IDs sorted.
+    for (size_t i = 0; i < count; ++i) {
+        if (csr.offsets[i] == csr.offsets[i + 1]) continue;
+        const auto& row = adj.adjacency[i];
+        size_t output = csr.offsets[i];
+        for (size_t j = 0; j < count; ++j) {
+            if (row[j]) {
+                csr.neighbors[output++] = j;
+            }
         }
     }
 }
