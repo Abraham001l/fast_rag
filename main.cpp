@@ -2,6 +2,7 @@
 #include <mpi.h>
 #include "doc_utilities.h"
 #include "embedding_utilities.h"
+#include "graph_utilities.h"
 using namespace std;
 
 constexpr size_t one_GB = 1024 * 1024 * 1024;
@@ -87,10 +88,22 @@ int main(int argc, char** argv) {
     vector<float> embeddings;
     embed_chunks(chunks, embeddings);
 
-    // printing the length of the embeddings
-    printf("Embeddings length: %zu\n", embeddings.size());
+    // building adjacency matrix from embeddings
+    matrix_rep_adjacency adj;
+    build_adjacency(adj, embeddings, 0.8f); // Initial threshold; tune for your documents.
 
+    // building CSR graph from adjacency matrix
+    csr_graph csr;
+    build_csr(csr, adj);
 
+    // printing the CSR graph for verification
+    for (size_t i = 0; i < csr.offsets.size() - 1; ++i) {
+        printf("Node %zu: ", i);
+        for (size_t j = csr.offsets[i]; j < csr.offsets[i + 1]; ++j) {
+            printf("%zu ", csr.neighbors[j]);
+        }
+        printf("\n");
+    }
 
     MPI_Win_unlock_all(shm_window);
     MPI_Win_free(&shm_window);
